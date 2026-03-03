@@ -1,0 +1,1140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Build the Bratwurst!</title>
+  <style>
+    :root {
+      --red: #c1121f;
+      --dark-red: #8d0d16;
+      --cream: #fff7ef;
+      --blue: #2e5fa8;
+      --white: #ffffff;
+      --text: #1f2937;
+      --shadow: 0 12px 26px rgba(0, 0, 0, 0.22);
+      --plate-size: min(42vw, 360px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #ffefe2 0%, #ffe7d4 100%);
+      overflow-x: hidden;
+    }
+
+    button {
+      font: inherit;
+      border: 0;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .screen {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .title-card {
+      width: min(760px, 94vw);
+      background: linear-gradient(145deg, var(--red), var(--dark-red));
+      color: white;
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 30px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .title-card::before,
+    .title-card::after {
+      content: "";
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      z-index: 0;
+    }
+
+    .title-card::before {
+      top: -120px;
+      left: -70px;
+    }
+
+    .title-card::after {
+      right: -80px;
+      bottom: -110px;
+    }
+
+    .title-card > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      margin: 0 0 8px;
+      letter-spacing: 0.03em;
+    }
+
+    .subtitle {
+      margin: 0 0 18px;
+      font-size: clamp(1rem, 2.4vw, 1.2rem);
+      opacity: 0.95;
+    }
+
+    .start-btn,
+    .restart-btn {
+      background: #ffd166;
+      color: #3d2b00;
+      font-weight: 700;
+      padding: 12px 22px;
+      border-radius: 999px;
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+      box-shadow: 0 6px 0 #d9ab4d;
+    }
+
+    .start-btn:hover,
+    .restart-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .start-btn:active,
+    .restart-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 3px 0 #d9ab4d;
+    }
+
+    .game-shell {
+      width: min(1200px, 96vw);
+      margin: 10px auto 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .top-ui {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .panel {
+      background: var(--white);
+      border: 2px solid #f3d7c9;
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .panel b {
+      color: var(--dark-red);
+    }
+
+    .music-btn {
+      background: #2e5fa8;
+      color: #fff;
+      font-weight: 700;
+      padding: 8px 12px;
+      border-radius: 8px;
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+
+    .music-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+
+    .instructions {
+      font-size: 0.95rem;
+      line-height: 1.35;
+    }
+
+    .arena-wrap {
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 3px solid #f0cfbf;
+      box-shadow: var(--shadow);
+      min-height: 70vh;
+    }
+
+    .oktoberfest-banner {
+      height: 74px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #123164;
+      font-weight: 700;
+      font-size: clamp(1.1rem, 2.4vw, 1.45rem);
+      letter-spacing: 0.08em;
+      background:
+        linear-gradient(45deg, rgba(255, 255, 255, 0.6) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255, 255, 255, 0.6) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.6) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.6) 75%),
+        linear-gradient(90deg, #73a3e6, #a8c7f0);
+      background-size: 18px 18px;
+      background-position: 0 0, 0 9px, 9px -9px, -9px 0, 0 0;
+      border-bottom: 2px dashed rgba(255, 255, 255, 0.9);
+    }
+
+    .arena {
+      position: relative;
+      min-height: calc(70vh - 74px);
+      background:
+        repeating-linear-gradient(
+          45deg,
+          #c1121f 0,
+          #c1121f 28px,
+          #fff 28px,
+          #fff 56px
+        );
+    }
+
+    .plate {
+      width: var(--plate-size);
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      background: radial-gradient(circle at 38% 34%, #fff 0%, #f4f4f4 65%, #e2e2e2 100%);
+      border: 10px solid #fefefe;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 5;
+    }
+
+    .table-shadow {
+      width: calc(var(--plate-size) + 46px);
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.16);
+      position: absolute;
+      left: 50%;
+      top: calc(50% + (var(--plate-size) / 2) + 10px);
+      transform: translateX(-50%);
+      filter: blur(4px);
+      z-index: 2;
+    }
+
+    .flag-row {
+      position: absolute;
+      top: 8px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+      z-index: 6;
+    }
+
+    .flag {
+      width: 54px;
+      height: 36px;
+      border: 2px solid #f6f6f6;
+      border-radius: 4px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      background: linear-gradient(#000 0 33.3%, #dd0000 33.3% 66.6%, #ffce00 66.6% 100%);
+      transform: rotate(-6deg);
+    }
+
+    .flag:last-child {
+      transform: rotate(6deg);
+    }
+
+    .ingredient-bank {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 14px;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(120px, 1fr));
+      gap: 10px;
+      z-index: 8;
+    }
+
+    .ingredient {
+      background: #fff;
+      border: 2px solid #f1d5ca;
+      border-radius: 12px;
+      min-height: 78px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      font-weight: 700;
+      padding: 8px;
+      user-select: none;
+      touch-action: none;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.13);
+      position: relative;
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+    }
+
+    .ingredient .emoji {
+      font-size: 1.5rem;
+      line-height: 1;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .ingredient-photo {
+      width: 34px;
+      height: 34px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 2px solid #f0e5de;
+      display: block;
+      margin: 0 auto 6px;
+      background: #fff;
+    }
+
+    .ingredient:hover {
+      transform: translateY(-3px) scale(1.01);
+      box-shadow: 0 9px 16px rgba(0, 0, 0, 0.16);
+    }
+
+    .ingredient.dragging {
+      z-index: 20;
+      transform: scale(1.06);
+      box-shadow: 0 10px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .ingredient.placed {
+      position: absolute;
+      width: 120px;
+      min-height: 68px;
+      border-color: #c7e6c9;
+      background: #f1fff1;
+      z-index: 12;
+      cursor: default;
+      pointer-events: none;
+      animation: pop 0.25s ease;
+    }
+
+    .ingredient.shake {
+      animation: shake 0.35s ease;
+    }
+
+    @keyframes pop {
+      from {
+        transform: scale(0.75);
+        opacity: 0.4;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes shake {
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+      20% {
+        transform: translateX(-8px);
+      }
+      40% {
+        transform: translateX(8px);
+      }
+      60% {
+        transform: translateX(-6px);
+      }
+      80% {
+        transform: translateX(6px);
+      }
+    }
+
+    .message {
+      min-height: 1.4em;
+      font-weight: 700;
+      color: #7f1d1d;
+      margin-top: 3px;
+    }
+
+    .leaderboard {
+      margin-top: 8px;
+    }
+
+    .leaderboard h3 {
+      margin: 0 0 8px;
+      color: #7b0f1b;
+      font-size: 1rem;
+      letter-spacing: 0.03em;
+    }
+
+    .leaderboard-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 6px;
+      font-size: 0.92rem;
+    }
+
+    .leaderboard-item {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 6px 8px;
+      border-radius: 8px;
+      background: #fffaf4;
+      border: 1px solid #f2ddcf;
+    }
+
+    .leaderboard-item.you {
+      background: #f0fff4;
+      border-color: #cde8d3;
+    }
+
+    .leaderboard-time {
+      font-weight: 700;
+      color: #123164;
+    }
+
+    .celebration-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 24;
+      overflow: hidden;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 8px;
+      height: 14px;
+      border-radius: 2px;
+      left: var(--x);
+      top: var(--y);
+      background: var(--c);
+      transform: translate(-50%, -50%);
+      animation: confetti-burst 900ms ease-out forwards;
+    }
+
+    .balloon {
+      position: absolute;
+      width: 18px;
+      height: 24px;
+      left: var(--x);
+      top: var(--y);
+      border-radius: 50% 50% 45% 45%;
+      background: var(--c);
+      box-shadow: inset -3px -3px 0 rgba(0, 0, 0, 0.1);
+      animation: balloon-float 1300ms ease-out forwards;
+    }
+
+    .balloon::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 24px;
+      width: 1px;
+      height: 14px;
+      background: rgba(20, 20, 20, 0.45);
+      transform: translateX(-50%);
+    }
+
+    @keyframes confetti-burst {
+      0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) rotate(0deg);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(360deg);
+      }
+    }
+
+    @keyframes balloon-float {
+      0% {
+        opacity: 0.95;
+        transform: translate(-50%, 0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--dx)), -120px) scale(1.08);
+      }
+    }
+
+    .win-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: grid;
+      place-items: center;
+      z-index: 30;
+    }
+
+    .win-card {
+      width: min(520px, 92vw);
+      background: var(--cream);
+      border-radius: 16px;
+      border: 3px solid #ffd166;
+      padding: 22px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .win-card h2 {
+      margin: 0 0 8px;
+      color: #0b4a21;
+    }
+
+    .win-card p {
+      margin: 0 0 14px;
+    }
+
+    @media (max-width: 980px) {
+      .top-ui {
+        grid-template-columns: 1fr;
+      }
+
+      .arena-wrap {
+        min-height: 78vh;
+      }
+
+      .arena {
+        min-height: calc(78vh - 74px);
+      }
+
+      .ingredient-bank {
+        grid-template-columns: repeat(3, minmax(110px, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      :root {
+        --plate-size: min(56vw, 310px);
+      }
+
+      .ingredient-bank {
+        grid-template-columns: repeat(2, minmax(100px, 1fr));
+      }
+
+      .ingredient {
+        min-height: 72px;
+        font-size: 0.92rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section id="titleScreen" class="screen">
+    <div class="title-card">
+      <h1>Build the Bratwurst!</h1>
+      <p class="subtitle">Drag only the traditional Bratwurst ingredients onto the plate.</p>
+      <button id="startBtn" class="start-btn">Start Game</button>
+    </div>
+  </section>
+
+  <section id="gameScreen" class="hidden">
+    <div class="game-shell">
+      <div class="top-ui">
+        <div class="panel"><b>Score:</b> <span id="score">0</span></div>
+        <div class="panel"><b>Time:</b> <span id="timer">60</span>s</div>
+        <div class="panel instructions">
+          <b>Instructions:</b> Drag ingredients to the plate, or click a card to auto-place attempt.
+          Pick only traditional Bratwurst items.
+          Avoid distractors like sushi or pasta.
+          <div id="message" class="message"></div>
+        </div>
+      </div>
+      <div class="panel leaderboard">
+        <h3>Leaderboard (Fastest Times)</h3>
+        <ol id="leaderboardList" class="leaderboard-list"></ol>
+      </div>
+      <div class="panel"><button id="musicBtn" class="music-btn" type="button">Music: ON</button></div>
+
+      <div class="arena-wrap">
+        <div class="oktoberfest-banner">OKTOBERFEST KITCHEN</div>
+        <div id="arena" class="arena">
+          <div class="flag-row">
+            <div class="flag" aria-hidden="true"></div>
+            <div class="flag" aria-hidden="true"></div>
+          </div>
+          <div class="table-shadow" aria-hidden="true"></div>
+          <div id="plate" class="plate" aria-label="Bratwurst plate target"></div>
+          <div id="ingredientBank" class="ingredient-bank"></div>
+          <div id="celebrationLayer" class="celebration-layer" aria-hidden="true"></div>
+
+          <div id="winOverlay" class="win-overlay hidden">
+            <div class="win-card">
+              <h2>Sehr gut! You made a Bratwurst dish!</h2>
+              <p>Final score: <span id="finalScore">0</span></p>
+              <button id="restartBtn" class="restart-btn">Restart</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Ingredient definitions are easy to edit for project changes.
+    // Correct items for this version: sausage, curry powder, ketchup, oil.
+    const INGREDIENTS = [
+      {
+        id: "sausage",
+        label: "Sausage",
+        emoji: "🌭",
+        correct: true,
+        image: "https://images.unsplash.com/photo-1615937657715-bc7b4b7962b7?auto=format&fit=crop&w=300&q=80"
+      },
+      {
+        id: "curry",
+        label: "Curry Powder",
+        emoji: "🟨",
+        correct: true,
+        image: "https://images.unsplash.com/photo-1615485925763-86786288908f?auto=format&fit=crop&w=300&q=80"
+      },
+      {
+        id: "ketchup",
+        label: "Ketchup",
+        emoji: "🍅",
+        correct: true,
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Heinz_Tomato_Ketchup_9g.jpg/240px-Heinz_Tomato_Ketchup_9g.jpg"
+      },
+      {
+        id: "oil",
+        label: "Oil",
+        emoji: "🫒",
+        correct: true,
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Olive_oil_bottle_and_bowl.jpg/320px-Olive_oil_bottle_and_bowl.jpg"
+      },
+      {
+        id: "pasta",
+        label: "Pasta",
+        emoji: "🍝",
+        correct: false,
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Pasta_Puttanesca.jpg/320px-Pasta_Puttanesca.jpg"
+      },
+      {
+        id: "sushi",
+        label: "Sushi",
+        emoji: "🍣",
+        correct: false,
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Sushi_platter.jpg/320px-Sushi_platter.jpg"
+      },
+      {
+        id: "syrup",
+        label: "Chocolate Syrup",
+        emoji: "🍫",
+        correct: false,
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Chocolate_syrup.jpg/320px-Chocolate_syrup.jpg"
+      },
+      {
+        id: "tortilla",
+        label: "Tortilla",
+        emoji: "🌮",
+        correct: false,
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Flour_tortillas.jpg/320px-Flour_tortillas.jpg"
+      },
+      {
+        id: "bun",
+        label: "Bread Roll",
+        emoji: "🥖",
+        correct: false,
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Bread_roll.jpg/320px-Bread_roll.jpg"
+      }
+    ];
+
+    const startBtn = document.getElementById("startBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const titleScreen = document.getElementById("titleScreen");
+    const gameScreen = document.getElementById("gameScreen");
+    const bank = document.getElementById("ingredientBank");
+    const arena = document.getElementById("arena");
+    const plate = document.getElementById("plate");
+    const scoreEl = document.getElementById("score");
+    const timerEl = document.getElementById("timer");
+    const messageEl = document.getElementById("message");
+    const winOverlay = document.getElementById("winOverlay");
+    const finalScoreEl = document.getElementById("finalScore");
+    const celebrationLayer = document.getElementById("celebrationLayer");
+    const musicBtn = document.getElementById("musicBtn");
+    const leaderboardList = document.getElementById("leaderboardList");
+
+    let score = 0;
+    let timeLeft = 60;
+    let timerId = null;
+    let placedCorrect = new Set();
+    let musicEnabled = true;
+    let musicCtx = null;
+    let musicTimer = null;
+
+    const BASE_LEADERBOARD = [
+      { name: "HansBot", seconds: 18, source: "bot" },
+      { name: "BratGPT", seconds: 20, source: "bot" },
+      { name: "CurryNinja", seconds: 22, source: "bot" },
+      { name: "Lena S.", seconds: 24, source: "player" },
+      { name: "Marco H.", seconds: 26, source: "player" },
+      { name: "Sofia R.", seconds: 28, source: "player" }
+    ];
+    const RUNS_STORAGE_KEY = "bratwurst_player_runs_v1";
+
+    // Fixed snap points around the plate for correct ingredients.
+    const snapPoints = [
+      { x: 50, y: 24 },
+      { x: 24, y: 50 },
+      { x: 76, y: 50 },
+      { x: 37, y: 74 },
+      { x: 63, y: 74 }
+    ];
+
+    function shuffle(list) {
+      const arr = [...list];
+      for (let i = arr.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function setMessage(text, color = "#7f1d1d") {
+      messageEl.textContent = text;
+      messageEl.style.color = color;
+    }
+
+    function updateScore(next) {
+      score = next;
+      scoreEl.textContent = String(score);
+    }
+
+    function formatTime(totalSeconds) {
+      const clamped = Math.max(0, Math.floor(totalSeconds));
+      const minutes = Math.floor(clamped / 60);
+      const seconds = clamped % 60;
+      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function loadPlayerRuns() {
+      try {
+        const raw = localStorage.getItem(RUNS_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(parsed)) {
+          return [];
+        }
+        return parsed
+          .filter((entry) => entry && typeof entry.name === "string" && Number.isFinite(entry.seconds))
+          .map((entry) => ({ name: entry.name, seconds: Number(entry.seconds), source: "you" }));
+      } catch {
+        return [];
+      }
+    }
+
+    function savePlayerRuns(runs) {
+      localStorage.setItem(RUNS_STORAGE_KEY, JSON.stringify(runs.slice(0, 20)));
+    }
+
+    function renderLeaderboard() {
+      const playerRuns = loadPlayerRuns();
+      const allRuns = [...BASE_LEADERBOARD, ...playerRuns]
+        .sort((a, b) => a.seconds - b.seconds)
+        .slice(0, 10);
+
+      leaderboardList.innerHTML = "";
+      allRuns.forEach((entry, index) => {
+        const row = document.createElement("li");
+        row.className = `leaderboard-item${entry.source === "you" ? " you" : ""}`;
+        row.innerHTML = `
+          <span>${index + 1}.</span>
+          <span>${entry.name}</span>
+          <span class="leaderboard-time">${formatTime(entry.seconds)}</span>
+        `;
+        leaderboardList.appendChild(row);
+      });
+    }
+
+    function isGoodScore(seconds) {
+      const allRuns = [...BASE_LEADERBOARD, ...loadPlayerRuns()].sort((a, b) => a.seconds - b.seconds);
+      if (allRuns.length < 10) {
+        return true;
+      }
+      return seconds <= allRuns[9].seconds;
+    }
+
+    function recordPlayerTime(seconds, customName = "") {
+      const runs = loadPlayerRuns();
+      const safeCustomName = customName.trim().slice(0, 18);
+      const nextIndex = runs.length + 1;
+      const name = safeCustomName || `You #${nextIndex}`;
+      runs.push({ name, seconds: Math.max(1, Math.floor(seconds)), source: "you" });
+      runs.sort((a, b) => a.seconds - b.seconds);
+      savePlayerRuns(runs);
+      renderLeaderboard();
+    }
+
+    function resetGame() {
+      clearInterval(timerId);
+      timerId = null;
+      updateScore(0);
+      timeLeft = 60;
+      timerEl.textContent = String(timeLeft);
+      placedCorrect = new Set();
+      // Remove cards previously snapped to the plate so restart is clean.
+      arena.querySelectorAll(".ingredient.placed").forEach((el) => el.remove());
+      celebrationLayer.innerHTML = "";
+      setMessage("", "#0f5132");
+      winOverlay.classList.add("hidden");
+      buildIngredients();
+    }
+
+    function createIngredientCard(item) {
+      const card = document.createElement("div");
+      card.className = "ingredient";
+      card.dataset.id = item.id;
+      card.dataset.correct = String(item.correct);
+      card.innerHTML = `
+        <img class="ingredient-photo" src="${item.image}" alt="${item.label}" loading="lazy" referrerpolicy="no-referrer">
+        <span class="emoji hidden">${item.emoji}</span>
+        <span>${item.label}</span>
+      `;
+
+      const imageEl = card.querySelector(".ingredient-photo");
+      const emojiEl = card.querySelector(".emoji");
+      imageEl.addEventListener("error", () => {
+        imageEl.classList.add("hidden");
+        emojiEl.classList.remove("hidden");
+      });
+
+      let startX = 0;
+      let startY = 0;
+      let downX = 0;
+      let downY = 0;
+      let pointerId = null;
+      let dragging = false;
+      let moved = false;
+      let originParent = null;
+      let originNext = null;
+
+      const onMove = (event) => {
+        if (!dragging || event.pointerId !== pointerId) {
+          return;
+        }
+        if (!moved) {
+          const distX = Math.abs(event.clientX - downX);
+          const distY = Math.abs(event.clientY - downY);
+          moved = distX > 6 || distY > 6;
+        }
+        const left = event.clientX - startX;
+        const top = event.clientY - startY;
+        card.style.left = `${left}px`;
+        card.style.top = `${top}px`;
+      };
+
+      const endDrag = (event) => {
+        if (!dragging || event.pointerId !== pointerId) {
+          return;
+        }
+
+        dragging = false;
+        card.classList.remove("dragging");
+        card.releasePointerCapture(pointerId);
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", endDrag);
+
+        if (!moved) {
+          if (card.dataset.correct === "true") {
+            handleCorrectDrop(card, item.id);
+          } else {
+            handleWrongDrop(card, originParent, originNext);
+          }
+          return;
+        }
+
+        const plateRect = plate.getBoundingClientRect();
+        const cardRect = card.getBoundingClientRect();
+        const centerX = cardRect.left + cardRect.width / 2;
+        const centerY = cardRect.top + cardRect.height / 2;
+        const droppedOnPlate =
+          centerX >= plateRect.left &&
+          centerX <= plateRect.right &&
+          centerY >= plateRect.top &&
+          centerY <= plateRect.bottom;
+
+        if (droppedOnPlate) {
+          if (card.dataset.correct === "true") {
+            handleCorrectDrop(card, item.id);
+          } else {
+            handleWrongDrop(card, originParent, originNext);
+          }
+        } else {
+          returnToBank(card, originParent, originNext);
+        }
+      };
+
+      card.addEventListener("pointerdown", (event) => {
+        if (card.classList.contains("placed") || winOverlay.classList.contains("hidden") === false) {
+          return;
+        }
+
+        dragging = true;
+        moved = false;
+        pointerId = event.pointerId;
+        downX = event.clientX;
+        downY = event.clientY;
+        originParent = card.parentElement;
+        originNext = card.nextSibling;
+
+        const rect = card.getBoundingClientRect();
+        startX = event.clientX - rect.left;
+        startY = event.clientY - rect.top;
+
+        card.classList.add("dragging");
+        card.style.position = "fixed";
+        card.style.left = `${rect.left}px`;
+        card.style.top = `${rect.top}px`;
+        card.style.width = `${rect.width}px`;
+
+        document.body.appendChild(card);
+        card.setPointerCapture(pointerId);
+        window.addEventListener("pointermove", onMove);
+        window.addEventListener("pointerup", endDrag);
+      });
+
+      return card;
+    }
+
+    function returnToBank(card, parent, next) {
+      card.style.position = "";
+      card.style.left = "";
+      card.style.top = "";
+      card.style.width = "";
+      card.classList.remove("dragging");
+      if (parent) {
+        parent.insertBefore(card, next);
+      } else {
+        bank.appendChild(card);
+      }
+    }
+
+    function handleWrongDrop(card, parent, next) {
+      setMessage("Not part of traditional Bratwurst!", "#7f1d1d");
+      updateScore(Math.max(0, score - 1));
+      card.classList.add("shake");
+      setTimeout(() => card.classList.remove("shake"), 320);
+      returnToBank(card, parent, next);
+      playTone(180, 0.08, "sawtooth");
+    }
+
+    function handleCorrectDrop(card, ingredientId) {
+      if (placedCorrect.has(ingredientId)) {
+        setMessage("This ingredient is already on the plate.", "#5f6b7a");
+        returnToBank(card, bank, null);
+        return;
+      }
+
+      const point = snapPoints[placedCorrect.size % snapPoints.length];
+      const plateRect = plate.getBoundingClientRect();
+      const arenaRect = arena.getBoundingClientRect();
+
+      const targetX =
+        plateRect.left - arenaRect.left + (plateRect.width * point.x) / 100 - card.offsetWidth / 2;
+      const targetY =
+        plateRect.top - arenaRect.top + (plateRect.height * point.y) / 100 - card.offsetHeight / 2;
+
+      card.classList.remove("dragging");
+      card.classList.add("placed");
+      card.style.position = "absolute";
+      card.style.left = `${targetX}px`;
+      card.style.top = `${targetY}px`;
+      card.style.width = "120px";
+      arena.appendChild(card);
+
+      placedCorrect.add(ingredientId);
+      updateScore(score + 2);
+      setMessage("Lecker! Great choice.", "#14532d");
+      playTone(520, 0.08, "triangle");
+      triggerCelebration();
+
+      const totalCorrect = INGREDIENTS.filter((item) => item.correct).length;
+      if (placedCorrect.size === totalCorrect) {
+        endGame(true);
+      }
+    }
+
+    function triggerCelebration() {
+      const colors = ["#ff4d6d", "#ffd166", "#38b000", "#2e86de", "#ff8fab", "#ffb703"];
+      const plateRect = plate.getBoundingClientRect();
+      const arenaRect = arena.getBoundingClientRect();
+      const centerX = plateRect.left - arenaRect.left + plateRect.width / 2;
+      const centerY = plateRect.top - arenaRect.top + plateRect.height / 2;
+
+      for (let i = 0; i < 18; i += 1) {
+        const piece = document.createElement("div");
+        piece.className = "confetti";
+        piece.style.setProperty("--x", `${centerX + (Math.random() * 24 - 12)}px`);
+        piece.style.setProperty("--y", `${centerY}px`);
+        piece.style.setProperty("--dx", `${Math.random() * 180 - 90}px`);
+        piece.style.setProperty("--dy", `${Math.random() * 170 - 30}px`);
+        piece.style.setProperty("--c", colors[Math.floor(Math.random() * colors.length)]);
+        celebrationLayer.appendChild(piece);
+        setTimeout(() => piece.remove(), 950);
+      }
+
+      for (let i = 0; i < 3; i += 1) {
+        const balloon = document.createElement("div");
+        balloon.className = "balloon";
+        balloon.style.setProperty("--x", `${centerX + (Math.random() * 120 - 60)}px`);
+        balloon.style.setProperty("--y", `${centerY - 18}px`);
+        balloon.style.setProperty("--dx", `${Math.random() * 90 - 45}px`);
+        balloon.style.setProperty("--c", colors[Math.floor(Math.random() * colors.length)]);
+        celebrationLayer.appendChild(balloon);
+        setTimeout(() => balloon.remove(), 1350);
+      }
+    }
+
+    function buildIngredients() {
+      bank.innerHTML = "";
+      const shuffled = shuffle(INGREDIENTS);
+      shuffled.forEach((item) => {
+        bank.appendChild(createIngredientCard(item));
+      });
+    }
+
+    function startTimer() {
+      clearInterval(timerId);
+      timerId = setInterval(() => {
+        timeLeft -= 1;
+        timerEl.textContent = String(timeLeft);
+        if (timeLeft <= 0) {
+          endGame(false);
+        }
+      }, 1000);
+    }
+
+    function startMusic() {
+      if (!musicEnabled || musicTimer) {
+        return;
+      }
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) {
+        return;
+      }
+      if (!musicCtx) {
+        musicCtx = new AudioCtx();
+      }
+      if (musicCtx.state === "suspended") {
+        musicCtx.resume();
+      }
+
+      // Short looping tune with a festive oompah feel.
+      const notes = [392, 494, 587, 494, 440, 523, 659, 523];
+      let i = 0;
+      musicTimer = setInterval(() => {
+        if (!musicEnabled || !musicCtx) {
+          return;
+        }
+        const now = musicCtx.currentTime;
+        const osc = musicCtx.createOscillator();
+        const gain = musicCtx.createGain();
+        osc.type = i % 2 === 0 ? "square" : "triangle";
+        osc.frequency.value = notes[i % notes.length];
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.04, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+        osc.connect(gain);
+        gain.connect(musicCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.22);
+        i += 1;
+      }, 260);
+    }
+
+    function stopMusic() {
+      clearInterval(musicTimer);
+      musicTimer = null;
+    }
+
+    function endGame(won) {
+      clearInterval(timerId);
+      timerId = null;
+
+      if (won) {
+        const elapsed = 60 - timeLeft;
+        let customName = "";
+        if (isGoodScore(elapsed)) {
+          const entered = window.prompt("Great score! Enter your name for the leaderboard:", "Player");
+          if (entered !== null) {
+            customName = entered;
+          }
+        }
+        recordPlayerTime(elapsed, customName);
+        setMessage("Sehr gut! All traditional ingredients are on the plate.", "#0b4a21");
+        finalScoreEl.textContent = String(score);
+        winOverlay.classList.remove("hidden");
+      } else {
+        setMessage("Time up! Press Restart and try again.", "#7f1d1d");
+        finalScoreEl.textContent = String(score);
+        winOverlay.classList.remove("hidden");
+        winOverlay.querySelector("h2").textContent = "Zeit vorbei! Try again.";
+      }
+    }
+
+    // Tiny optional sound effect generator using Web Audio API.
+    function playTone(freq, duration, waveType) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) {
+        return;
+      }
+      const ctx = new AudioCtx();
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = waveType;
+      oscillator.frequency.value = freq;
+      gain.gain.value = 0.04;
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + duration);
+      oscillator.onended = () => ctx.close();
+    }
+
+    function startGame() {
+      titleScreen.classList.add("hidden");
+      gameScreen.classList.remove("hidden");
+      winOverlay.querySelector("h2").textContent = "Sehr gut! You made a Bratwurst dish!";
+      renderLeaderboard();
+      resetGame();
+      startTimer();
+      startMusic();
+    }
+
+    startBtn.addEventListener("click", startGame);
+    restartBtn.addEventListener("click", () => {
+      winOverlay.querySelector("h2").textContent = "Sehr gut! You made a Bratwurst dish!";
+      resetGame();
+      startTimer();
+      startMusic();
+    });
+
+    musicBtn.addEventListener("click", () => {
+      musicEnabled = !musicEnabled;
+      musicBtn.textContent = musicEnabled ? "Music: ON" : "Music: OFF";
+      if (musicEnabled) {
+        startMusic();
+      } else {
+        stopMusic();
+      }
+    });
+  </script>
+</body>
+</html>
