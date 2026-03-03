@@ -387,6 +387,25 @@
       letter-spacing: 0.03em;
     }
 
+    .cloud-state {
+      margin-left: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #1f5130;
+      background: #e9f9ee;
+      border: 1px solid #bfe7ca;
+      border-radius: 999px;
+      padding: 2px 8px;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    .cloud-state.offline {
+      color: #8a2a2a;
+      background: #fff0f0;
+      border-color: #f2caca;
+    }
+
     .leaderboard-toggle {
       width: 34px;
       height: 34px;
@@ -621,9 +640,12 @@
         display: flex;
         gap: 8px;
         overflow-x: auto;
+        overflow-y: hidden;
         grid-template-columns: none;
         padding-bottom: 4px;
         scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-x;
       }
 
       .ingredient-bank::-webkit-scrollbar {
@@ -641,6 +663,7 @@
         min-height: 88px;
         font-size: 0.9rem;
         scroll-snap-align: start;
+        touch-action: pan-x;
       }
 
       .ingredient.placed {
@@ -718,7 +741,7 @@
       </div>
       <div class="panel leaderboard">
         <div class="leaderboard-head">
-          <h3>Leaderboard (Fastest Times)</h3>
+          <h3>Leaderboard (Fastest Times) <span id="cloudState" class="cloud-state">Cloud: ...</span></h3>
           <button id="leaderboardToggle" class="leaderboard-toggle" type="button" aria-label="Collapse leaderboard" aria-expanded="true">▾</button>
         </div>
         <ol id="leaderboardList" class="leaderboard-list"></ol>
@@ -835,6 +858,7 @@
     const leaderboardList = document.getElementById("leaderboardList");
     const leaderboardToggle = document.getElementById("leaderboardToggle");
     const leaderboardPanel = document.querySelector(".leaderboard");
+    const cloudStateEl = document.getElementById("cloudState");
 
     let score = 0;
     let timeLeft = 60;
@@ -843,6 +867,7 @@
     let musicEnabled = true;
     let musicCtx = null;
     let musicTimer = null;
+    let leaderboardPollId = null;
 
     const BASE_LEADERBOARD = [
       { name: "HansBot", seconds: 18, source: "bot" },
@@ -915,6 +940,11 @@
       return Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY);
     }
 
+    function setCloudState(text, online) {
+      cloudStateEl.textContent = text;
+      cloudStateEl.classList.toggle("offline", !online);
+    }
+
     function supabaseHeaders(extra = {}) {
       return {
         apikey: SUPABASE_PUBLISHABLE_KEY,
@@ -932,7 +962,8 @@
         "?select=player_name,seconds,created_at&order=seconds.asc,created_at.asc&limit=10";
       const response = await fetch(endpoint, { headers: supabaseHeaders() });
       if (!response.ok) {
-        throw new Error("Failed to fetch remote leaderboard");
+        const message = await response.text();
+        throw new Error(`Failed to fetch remote leaderboard: ${message}`);
       }
       const rows = await response.json();
       return rows
@@ -958,23 +989,28 @@
         body: JSON.stringify([{ player_name: name, seconds }])
       });
       if (!response.ok) {
-        throw new Error("Failed to save remote leaderboard entry");
+        const message = await response.text();
+        throw new Error(`Failed to save remote leaderboard entry: ${message}`);
       }
     }
 
     async function renderLeaderboard() {
       const playerRuns = loadPlayerRuns();
       let remoteRuns = [];
+      let usingCloud = false;
       try {
         remoteRuns = await fetchRemoteRuns();
+        usingCloud = true;
       } catch {
         remoteRuns = [];
+        usingCloud = false;
       }
 
-      const allRuns = [...BASE_LEADERBOARD, ...remoteRuns, ...playerRuns]
+      const allRuns = (usingCloud ? [...BASE_LEADERBOARD, ...remoteRuns] : [...BASE_LEADERBOARD, ...playerRuns])
         .sort((a, b) => a.seconds - b.seconds)
         .slice(0, 10);
       latestLeaderboard = allRuns;
+      setCloudState(usingCloud ? "Cloud: Connected" : "Cloud: Offline", usingCloud);
 
       leaderboardList.innerHTML = "";
       allRuns.forEach((entry, index) => {
@@ -1014,6 +1050,13 @@
         // Keep local results even if network/API fails.
       }
       await renderLeaderboard();
+    }
+
+    function startLeaderboardPolling() {
+      clearInterval(leaderboardPollId);
+      leaderboardPollId = setInterval(() => {
+        renderLeaderboard();
+      }, 9000);
     }
 
     function resetGame() {
@@ -1347,6 +1390,7 @@
       gameScreen.classList.remove("hidden");
       winOverlay.querySelector("h2").textContent = "Sehr gut! You made a Bratwurst dish!";
       renderLeaderboard();
+      startLeaderboardPolling();
       resetGame();
       startTimer();
       startMusic();
