@@ -372,11 +372,46 @@
       margin-top: 8px;
     }
 
+    .leaderboard-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
     .leaderboard h3 {
-      margin: 0 0 8px;
+      margin: 0;
       color: #7b0f1b;
       font-size: 1rem;
       letter-spacing: 0.03em;
+    }
+
+    .leaderboard-toggle {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid #e7cfc2;
+      background: #fff6ef;
+      color: #7b0f1b;
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1;
+      display: grid;
+      place-items: center;
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+
+    .leaderboard-toggle:hover {
+      filter: brightness(0.98);
+    }
+
+    .leaderboard.is-collapsed .leaderboard-list {
+      display: none;
+    }
+
+    .leaderboard.is-collapsed .leaderboard-toggle {
+      transform: rotate(-90deg);
     }
 
     .leaderboard-list {
@@ -520,18 +555,142 @@
       }
     }
 
-    @media (max-width: 640px) {
+    @media (max-width: 768px) {
       :root {
-        --plate-size: min(56vw, 310px);
+        --plate-size: min(62vw, 300px);
+      }
+
+      .screen {
+        padding: 14px;
+      }
+
+      .title-card {
+        padding: 22px 16px;
+        border-radius: 16px;
+      }
+
+      .start-btn,
+      .restart-btn {
+        width: min(86vw, 290px);
+      }
+
+      .game-shell {
+        width: min(100vw - 12px, 900px);
+        gap: 8px;
+        margin: 8px auto 10px;
+      }
+
+      .panel {
+        padding: 10px;
+      }
+
+      .music-btn {
+        width: 100%;
+      }
+
+      .arena-wrap {
+        min-height: 82vh;
+        border-radius: 14px;
+      }
+
+      .oktoberfest-banner {
+        height: 64px;
+        font-size: clamp(1rem, 4vw, 1.2rem);
+        letter-spacing: 0.04em;
+        text-align: center;
+        padding: 0 8px;
+      }
+
+      .arena {
+        min-height: calc(82vh - 64px);
+      }
+
+      .plate {
+        top: 39%;
+        border-width: 8px;
+      }
+
+      .table-shadow {
+        top: calc(39% + (var(--plate-size) / 2) + 8px);
       }
 
       .ingredient-bank {
-        grid-template-columns: repeat(2, minmax(100px, 1fr));
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        grid-template-columns: none;
+        padding-bottom: 4px;
+        scroll-snap-type: x mandatory;
+      }
+
+      .ingredient-bank::-webkit-scrollbar {
+        height: 6px;
+      }
+
+      .ingredient-bank::-webkit-scrollbar-thumb {
+        background: #c97a83;
+        border-radius: 999px;
       }
 
       .ingredient {
-        min-height: 72px;
-        font-size: 0.92rem;
+        min-width: 118px;
+        max-width: 118px;
+        min-height: 88px;
+        font-size: 0.9rem;
+        scroll-snap-align: start;
+      }
+
+      .ingredient.placed {
+        width: 96px;
+        min-height: 62px;
+        font-size: 0.82rem;
+      }
+
+      .ingredient-photo {
+        width: 30px;
+        height: 30px;
+      }
+
+      .leaderboard-list {
+        font-size: 0.86rem;
+      }
+
+      .leaderboard-item {
+        grid-template-columns: 24px 1fr auto;
+        gap: 6px;
+        padding: 5px 6px;
+      }
+
+      .instructions {
+        font-size: 0.9rem;
+        line-height: 1.3;
+      }
+    }
+
+    @media (max-width: 420px) {
+      :root {
+        --plate-size: min(67vw, 270px);
+      }
+
+      .plate {
+        top: 37%;
+      }
+
+      .table-shadow {
+        top: calc(37% + (var(--plate-size) / 2) + 8px);
+      }
+
+      .ingredient {
+        min-width: 108px;
+        max-width: 108px;
+        min-height: 82px;
+      }
+
+      .ingredient.placed {
+        width: 88px;
       }
     }
   </style>
@@ -558,7 +717,10 @@
         </div>
       </div>
       <div class="panel leaderboard">
-        <h3>Leaderboard (Fastest Times)</h3>
+        <div class="leaderboard-head">
+          <h3>Leaderboard (Fastest Times)</h3>
+          <button id="leaderboardToggle" class="leaderboard-toggle" type="button" aria-label="Collapse leaderboard" aria-expanded="true">▾</button>
+        </div>
         <ol id="leaderboardList" class="leaderboard-list"></ol>
       </div>
       <div class="panel"><button id="musicBtn" class="music-btn" type="button">Music: ON</button></div>
@@ -671,6 +833,8 @@
     const celebrationLayer = document.getElementById("celebrationLayer");
     const musicBtn = document.getElementById("musicBtn");
     const leaderboardList = document.getElementById("leaderboardList");
+    const leaderboardToggle = document.getElementById("leaderboardToggle");
+    const leaderboardPanel = document.querySelector(".leaderboard");
 
     let score = 0;
     let timeLeft = 60;
@@ -1204,6 +1368,15 @@
       } else {
         stopMusic();
       }
+    });
+
+    leaderboardToggle.addEventListener("click", () => {
+      const collapsed = leaderboardPanel.classList.toggle("is-collapsed");
+      leaderboardToggle.setAttribute("aria-expanded", String(!collapsed));
+      leaderboardToggle.setAttribute(
+        "aria-label",
+        collapsed ? "Expand leaderboard" : "Collapse leaderboard"
+      );
     });
   </script>
 </body>
